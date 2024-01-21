@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: ns-wordpress
+  labels:
+    app: wordpress-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wordpress-mysql
+  template:
+    metadata:
+      labels:
+        app: wordpress-mysql
+    spec:
+      containers:
+      - name: wordpress-mysql-container
+        image: mysql:8.0
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+        ports:
+        - containerPort: 3306
+        volumeMounts: 
+        - name: wordpress-mysql-volume
+          mountPath: /var/lib/mysql
+        env: 
+          - name: MYSQL_DATABASE
+            value: wordpress
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: MYSQL_ROOT_PASSWORD
+      volumes: 
+      - name: wordpress-mysql-volume
+        persistentVolumeClaim:
+          claimName: pvc-mysql

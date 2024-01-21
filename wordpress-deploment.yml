@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wp-app
+  namespace: ns-wordpress
+  labels:
+    app: wordpress-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wordpress-app
+  template:
+    metadata:
+      labels:
+        app: wordpress-app
+    spec:
+      containers:
+      - name: wordpress-app-container
+        image: wordpress:6.4.2
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+        ports:
+        - containerPort: 80
+        volumeMounts: 
+        - name: wordpress-app-volume
+          mountPath: /var/lib/app
+        env: 
+          - name: WORDPRESS_DB_HOST
+            value: wordpress-mysql:3306
+          - name: WORDPRESS_DB_USER
+            value: root
+          - name: WORDPRESS_DB_NAME
+            value: wordpress
+          - name: WORDPRESS_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: MYSQL_ROOT_PASSWORD
+      volumes: 
+      - name: wordpress-app-volume
+        persistentVolumeClaim:
+          claimName: pvc-wordpress
